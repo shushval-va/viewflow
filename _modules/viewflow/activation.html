@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>viewflow.activation &mdash; django-viewflow 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="django-viewflow 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for viewflow.activation</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">celery.utils</span> <span class="kn">import</span> <span class="n">uuid</span>
+<span class="kn">from</span> <span class="nn">viewflow</span> <span class="kn">import</span> <span class="n">signals</span>
+<span class="kn">from</span> <span class="nn">viewflow.fields</span> <span class="kn">import</span> <span class="n">get_task_ref</span>
+
+
+<div class="viewcode-block" id="Activation"><a class="viewcode-back" href="../../core_concepts.html#viewflow.activation.Activation">[docs]</a><span class="k">class</span> <span class="nc">Activation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Activation responsible for managing livecycle and persistance of flow task instance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activation should be available for instante without any constructor parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Activation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Activation.activate_next"><a class="viewcode-back" href="../../core_concepts.html#viewflow.activation.Activation.activate_next">[docs]</a>    <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activates next connected flow tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Activation.activate"><a class="viewcode-back" href="../../core_concepts.html#viewflow.activation.Activation.activate">[docs]</a>    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instanciate and persist new flow task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">StartActivation</span><span class="p">(</span><span class="n">Activation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base activation that creates new process instance</span>
+
+<span class="sd">    Start activations could not be activated by other tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize new activation instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span> <span class="o">=</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">process_cls</span><span class="p">(</span><span class="n">flow_cls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">task_cls</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">flow_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize start task for execution</span>
+
+<span class="sd">        No db changes performed. It is safe to call it on GET requests</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_prepared</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and starts new process instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">process</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">process</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span>
+        <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="n">signals</span><span class="o">.</span><span class="n">flow_started</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_finished</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_next</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate all outgoing edges</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">outgoing</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">_outgoing</span><span class="p">():</span>
+            <span class="n">outgoing</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TaskActivation</span><span class="p">(</span><span class="n">Activation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for flow tasks thatdo some work</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize new activation instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span> <span class="o">=</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">process_cls</span><span class="o">.</span><span class="n">_default_manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">flow_cls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">process_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize task for execution</span>
+
+<span class="sd">        No db changes performed. It is safe to call it on GET requests</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_prepared</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finishes the task and activate next</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_finished</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_next</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate all outgoing edges</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">outgoing</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">_outgoing</span><span class="p">():</span>
+            <span class="n">outgoing</span><span class="o">.</span><span class="n">dst</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ViewActivation</span><span class="p">(</span><span class="n">TaskActivation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Activation for task performed by human in django views</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assigns user to task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instnatiate new task, calculate and store required user permissions.</span>
+
+<span class="sd">        If task could be assigned to user, assigns it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">prev_activation</span><span class="o">.</span><span class="n">process</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">flow_cls</span><span class="o">.</span><span class="n">task_cls</span><span class="p">(</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+            <span class="n">flow_task</span><span class="o">=</span><span class="n">flow_task</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+
+        <span class="c"># Try to assign permission</span>
+        <span class="n">owner_permission</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">calc_owner_permission</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">owner_permission</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">owner_permission</span> <span class="o">=</span> <span class="n">owner_permission</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+        <span class="c"># Try to assign owner</span>
+        <span class="n">owner</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">calc_owner</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">owner</span><span class="p">:</span>
+            <span class="n">activation</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">activation</span>
+
+
+<span class="k">class</span> <span class="nc">JobActivation</span><span class="p">(</span><span class="n">TaskActivation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Activation for long-running background celery tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">external_task_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves schedulled celery task_id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">external_task_id</span><span class="o">=</span><span class="n">external_task_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Async task schedule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span>
+            <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">get_task_ref</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">process_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">pk</span><span class="p">],</span>
+            <span class="n">task_id</span><span class="o">=</span><span class="n">task_id</span><span class="p">,</span>
+            <span class="n">countdown</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Persist that job is started</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_started</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Celery task finished with `result`, finishes the flow task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JobActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate and schedule for background job execution</span>
+
+<span class="sd">        It is safe to schedule job just now b/c the process instance is locked,</span>
+<span class="sd">        and job will wait until this transaction completes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">prev_activation</span><span class="o">.</span><span class="n">process</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">flow_cls</span><span class="o">.</span><span class="n">task_cls</span><span class="p">(</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+            <span class="n">flow_task</span><span class="o">=</span><span class="n">flow_task</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+        <span class="n">external_task_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">external_task_id</span><span class="p">)</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">schedule</span><span class="p">(</span><span class="n">external_task_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">activation</span>
+
+
+<span class="k">class</span> <span class="nc">GateActivation</span><span class="p">(</span><span class="n">Activation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Activation for task gates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span> <span class="o">=</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">process_cls</span><span class="o">.</span><span class="n">_default_manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">flow_cls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">process_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_prepared</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_started</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute gate conditions, prepare data required to determine</span>
+<span class="sd">        next tasks for activation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_finished</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_next</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate gate, immediatle executes it, and activate next tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">prev_activation</span><span class="o">.</span><span class="n">process</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">flow_cls</span><span class="o">.</span><span class="n">task_cls</span><span class="p">(</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+            <span class="n">flow_task</span><span class="o">=</span><span class="n">flow_task</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">activation</span>
+
+
+<span class="k">class</span> <span class="nc">EndActivation</span><span class="p">(</span><span class="n">Activation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Activation that finishes the proceess, and cancells all other active tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize new activation instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span> <span class="o">=</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">process_cls</span><span class="o">.</span><span class="n">_default_manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">flow_cls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">process_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_prepared</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">active_tasks</span><span class="p">():</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">deactivate</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_finished</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">flow_finished</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark process as done, and cancel all other active tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">flow_task</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">prev_activation</span><span class="o">.</span><span class="n">process</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">flow_cls</span><span class="o">.</span><span class="n">task_cls</span><span class="p">(</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+            <span class="n">flow_task</span><span class="o">=</span><span class="n">flow_task</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">prev_activation</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="n">activation</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">activation</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mikhail Podgurskiy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

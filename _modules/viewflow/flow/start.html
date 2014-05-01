@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>viewflow.flow.start &mdash; django-viewflow 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="django-viewflow 0.1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="viewflow.flow" href="../flow.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../flow.html" accesskey="U">viewflow.flow</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for viewflow.flow.start</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Start flow task, instantiate new flow process</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">PermissionDenied</span>
+<span class="kn">from</span> <span class="nn">django.core.urlresolvers</span> <span class="kn">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">UpdateView</span>
+
+<span class="kn">from</span> <span class="nn">viewflow.activation</span> <span class="kn">import</span> <span class="n">StartActivation</span>
+<span class="kn">from</span> <span class="nn">viewflow.exceptions</span> <span class="kn">import</span> <span class="n">FlowRuntimeError</span>
+<span class="kn">from</span> <span class="nn">viewflow.flow.base</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Edge</span>
+
+
+<div class="viewcode-block" id="flow_start_view"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.flow_start_view">[docs]</a><span class="k">def</span> <span class="nf">flow_start_view</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator for start views, creates and initializes start activation</span>
+
+<span class="sd">    Expects view with signature</span>
+<span class="sd">             :: (request, activation, **kwargs)</span>
+<span class="sd">      or CBV view that implemnts ViewActivation, in this case, dispatch</span>
+<span class="sd">      with would be called with</span>
+<span class="sd">             :: (request, **kwargs)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">             :: (request, flow_task, **kwargs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">StartViewDecorator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+            <span class="n">functools</span><span class="o">.</span><span class="n">update_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">activation</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">activation_cls</span><span class="p">()</span>
+                <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">instancetype</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            If we decoration method on CBV that have StartActivation interface,</span>
+<span class="sd">            no custom activation required</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+
+            <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__get__</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">instance</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">StartActivation</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">StartViewDecorator</span>
+
+</div>
+<span class="k">class</span> <span class="nc">StartViewActivation</span><span class="p">(</span><span class="n">StartActivation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tracks task statistics in activation form</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">management_form_cls</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">management_form_cls</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StartViewActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">management_form</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">management_form_cls</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">management_form_cls</span> <span class="o">=</span> <span class="n">management_form_cls</span>
+
+    <span class="k">def</span> <span class="nf">get_management_form_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">management_form_cls</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">management_form_cls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">management_form_cls</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StartViewActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+        <span class="n">management_form_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_management_form_cls</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">management_form</span> <span class="o">=</span> <span class="n">management_form_cls</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">management_form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">FlowRuntimeError</span><span class="p">(</span><span class="s">&#39;Activation metadata is broken {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">management_form</span><span class="o">.</span><span class="n">errors</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">management_form</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="StartViewMixin"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartViewMixin">[docs]</a><span class="k">class</span> <span class="nc">StartViewMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mixin for start views, that not implements activation interface</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StartViewMixin.get_context_data"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartViewMixin.get_context_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds `activation` to context data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartViewMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;activation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span>
+        <span class="k">return</span> <span class="n">context</span>
+</div>
+<div class="viewcode-block" id="StartViewMixin.get_success_url"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartViewMixin.get_success_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_success_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Redirects to flow index page</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;viewflow:index&#39;</span><span class="p">,</span> <span class="n">current_app</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="StartViewMixin.get_template_names"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartViewMixin.get_template_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_template_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get template names, first `app_name/flow/start.html` would be checked,</span>
+<span class="sd">        and if missed, standard `viewflow/flow/start.html` would be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{}/flow/start.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">),</span>
+                <span class="s">&#39;viewflow/flow/start.html&#39;</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">form_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartViewMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">form_valid</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="nd">@flow_start_view</span><span class="p">()</span>
+<div class="viewcode-block" id="StartViewMixin.dispatch"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartViewMixin.dispatch">[docs]</a>    <span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check user permissions, and prepare flow to execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PermissionDenied</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartViewMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="StartView"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView">[docs]</a><span class="k">class</span> <span class="nc">StartView</span><span class="p">(</span><span class="n">StartViewActivation</span><span class="p">,</span> <span class="n">UpdateView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic start view, allows to modify subset of process fields,</span>
+<span class="sd">    implements :class:`viewflow.activation.StartActivation` interface</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns process class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">process_cls</span>
+
+<div class="viewcode-block" id="StartView.get_context_data"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView.get_context_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds `activation` to context data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;activation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="n">context</span>
+</div>
+<div class="viewcode-block" id="StartView.get_object"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView.get_object">[docs]</a>    <span class="k">def</span> <span class="nf">get_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns process instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span>
+</div>
+<div class="viewcode-block" id="StartView.get_template_names"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView.get_template_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_template_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get template names, first `app_name/flow/start.html` would be checked,</span>
+<span class="sd">        and if missed, standard `viewflow/flow/start.html` would be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;{}/flow/start.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">),</span>
+                <span class="s">&#39;viewflow/flow/start.html&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="StartView.get_success_url"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView.get_success_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_success_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Redirects to flow index page</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;viewflow:index&#39;</span><span class="p">,</span> <span class="n">current_app</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">form_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">form_valid</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">object</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="nd">@flow_start_view</span><span class="p">()</span>
+<div class="viewcode-block" id="StartView.dispatch"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.StartView.dispatch">[docs]</a>    <span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check user permissions, and prepare flow to execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PermissionDenied</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">Start</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start process event</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        start = flow.Start(StartView, fields=[&quot;some_process_field&quot;]) \\</span>
+<span class="sd">            .Available(lambda user: user.is_super_user) \\</span>
+<span class="sd">            .Activate(this.first_start)</span>
+
+<span class="sd">    In case of function based view::</span>
+
+<span class="sd">        start = flow.Start(start_process)</span>
+
+<span class="sd">        @flow_start_view()</span>
+<span class="sd">        def start_process(request, activation):</span>
+<span class="sd">             if not activation.flow_task.has_perm(request.user):</span>
+<span class="sd">                 raise PermissionDenied</span>
+
+<span class="sd">             activation.prepare(request.POST or None)</span>
+<span class="sd">             form = SomeForm(request.POST or None)</span>
+
+<span class="sd">             if form.is_valid():</span>
+<span class="sd">                  form.save()</span>
+<span class="sd">                  activation.done()</span>
+<span class="sd">                  return redirect(&#39;/&#39;)</span>
+<span class="sd">             return render(request, {&#39;activation&#39;: activation, &#39;form&#39;: form})</span>
+
+<span class="sd">    Ensure to include `{{ activation.management_form }}` insude template, to proper</span>
+<span class="sd">    track when task was started and other task perfomance statictics::</span>
+
+<span class="sd">             &lt;form method=&quot;POST&quot;&gt;</span>
+<span class="sd">                  {{ form }}</span>
+<span class="sd">                  {{ activation.management_form }}</span>
+<span class="sd">                  &lt;button type=&quot;submit&quot;/&gt;</span>
+<span class="sd">             &lt;/form&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">task_type</span> <span class="o">=</span> <span class="s">&#39;START&#39;</span>
+    <span class="n">activation_cls</span> <span class="o">=</span> <span class="n">StartViewActivation</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_or_cls</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">activation_cls</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepts view callable or CBV View class with view kwargs,</span>
+<span class="sd">        if CBV view implements StartActivation, it used as activation_cls</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_args</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">view_or_cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_view_cls</span> <span class="o">=</span> <span class="n">view_or_cls</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_view_args</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">view_or_cls</span><span class="p">,</span> <span class="n">StartActivation</span><span class="p">):</span>
+                <span class="n">activation_cls</span> <span class="o">=</span> <span class="n">view_or_cls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_view</span> <span class="o">=</span> <span class="n">view_or_cls</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Start</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">activation_cls</span><span class="o">=</span><span class="n">activation_cls</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_outgoing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">next_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">Edge</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">next_node</span><span class="p">,</span> <span class="n">edge_class</span><span class="o">=</span><span class="s">&#39;next&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">Activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">Available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">owner_kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make process start action available for the User</span>
+<span class="sd">        accepts user lookup kwargs or callable predicate :: User -&gt; bool</span>
+
+<span class="sd">        .Available(username=&#39;employee&#39;)</span>
+<span class="sd">        .Available(lambda user: user.is_super_user)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">owner</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="n">owner</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="n">owner_kwargs</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">Permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="n">assign_view</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make process start available for users with specific permission</span>
+<span class="sd">        acceps permissions name or callable predicate :: User -&gt; bool</span>
+
+<span class="sd">        .Permission(&#39;my_app.can_approve&#39;)</span>
+<span class="sd">        .Permission(lambda user: user.department_id is not None)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span> <span class="o">=</span> <span class="n">permission</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_view</span> <span class="o">=</span> <span class="n">assign_view</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cls</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">viewflow.views</span> <span class="kn">import</span> <span class="n">start</span>
+                <span class="k">return</span> <span class="n">start</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cls</span><span class="o">.</span><span class="n">as_view</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_view_args</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span>
+
+    <span class="k">def</span> <span class="nf">has_perm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">get_user_model</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_owner</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="n">owner</span> <span class="o">=</span> <span class="n">get_user_model</span><span class="p">()</span><span class="o">.</span><span class="n">_default_manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_owner</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">owner</span> <span class="o">==</span> <span class="n">user</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            No restriction</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../flow.html" >viewflow.flow</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mikhail Podgurskiy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

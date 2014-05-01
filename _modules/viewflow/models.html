@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>viewflow.models &mdash; django-viewflow 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="django-viewflow 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for viewflow.models</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django_fsm</span> <span class="kn">import</span> <span class="n">FSMField</span><span class="p">,</span> <span class="n">transition</span>
+
+<span class="kn">from</span> <span class="nn">viewflow.exceptions</span> <span class="kn">import</span> <span class="n">FlowRuntimeError</span>
+<span class="kn">from</span> <span class="nn">viewflow.fields</span> <span class="kn">import</span> <span class="n">FlowReferenceField</span><span class="p">,</span> <span class="n">TaskReferenceField</span><span class="p">,</span> <span class="n">TokenField</span>
+
+
+<div class="viewcode-block" id="Process"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Process">[docs]</a><span class="k">class</span> <span class="nc">Process</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for Process data object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">STATUS</span><span class="p">:</span>
+        <span class="n">NEW</span> <span class="o">=</span> <span class="s">&#39;NEW&#39;</span>
+        <span class="n">STARTED</span> <span class="o">=</span> <span class="s">&#39;STR&#39;</span>
+        <span class="n">FINISHED</span> <span class="o">=</span> <span class="s">&#39;FNS&#39;</span>
+        <span class="n">ERROR</span> <span class="o">=</span> <span class="s">&#39;ERR&#39;</span>
+
+    <span class="n">STATUS_CHOICES</span> <span class="o">=</span> <span class="p">((</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="s">&#39;New&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="s">&#39;Stated&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">,</span> <span class="s">&#39;Finished&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s">&#39;Error&#39;</span><span class="p">))</span>
+
+    <span class="n">flow_cls</span> <span class="o">=</span> <span class="n">FlowReferenceField</span><span class="p">()</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">FSMField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">STATUS_CHOICES</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">)</span>
+
+    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">finished</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">active_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">finished__isnull</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;created&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for Task state objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">STATUS</span><span class="p">:</span>
+        <span class="n">NEW</span> <span class="o">=</span> <span class="s">&#39;NEW&#39;</span>
+        <span class="n">ASSIGNED</span> <span class="o">=</span> <span class="s">&#39;ASN&#39;</span>
+        <span class="n">PREPARED</span> <span class="o">=</span> <span class="s">&#39;PRP&#39;</span>
+        <span class="n">STARTED</span> <span class="o">=</span> <span class="s">&#39;STR&#39;</span>
+        <span class="n">FINISHED</span> <span class="o">=</span> <span class="s">&#39;FNS&#39;</span>
+        <span class="n">CANCELLED</span> <span class="o">=</span> <span class="s">&#39;CNC&#39;</span>
+        <span class="n">ERROR</span> <span class="o">=</span> <span class="s">&#39;ERR&#39;</span>
+
+    <span class="n">STATUS_CHOICES</span> <span class="o">=</span> <span class="p">((</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="s">&#39;New&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">,</span> <span class="s">&#39;Assigned&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">,</span> <span class="s">&#39;Prepared for execution&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="s">&#39;Stated&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">,</span> <span class="s">&#39;Finished&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">CANCELLED</span><span class="p">,</span> <span class="s">&#39;Cancelled&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s">&#39;Error&#39;</span><span class="p">))</span>
+
+    <span class="n">process</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Process</span><span class="p">)</span>
+    <span class="n">flow_task</span> <span class="o">=</span> <span class="n">TaskReferenceField</span><span class="p">()</span>
+    <span class="n">flow_task_type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">FSMField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">STATUS_CHOICES</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">)</span>
+
+    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">started</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">finished</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="s">&#39;self&#39;</span><span class="p">)</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">TokenField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;start&#39;</span><span class="p">)</span>
+
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">AUTH_USER_MODEL</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">external_task_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">owner_permission</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_in_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure that we have primary key and that&#39;s we are safe to create referencied models</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
+<div class="viewcode-block" id="Task.assign"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">external_task_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tasks that perform some activity should be assotiated with</span>
+<span class="sd">        task owner user or background task id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">external_task_id</span> <span class="o">=</span> <span class="n">external_task_id</span>
+</div>
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">)</span>
+<div class="viewcode-block" id="Task.prepare"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Task going to be started. Task could be initialized several times (probably on GET request)</span>
+<span class="sd">        Initialized tasks could not be saved</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+</div>
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
+<div class="viewcode-block" id="Task.start"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Task that non involves user view interaction could be marked as started.</span>
+<span class="sd">        User view task only preprared but not started, b/c we do not do hit db on GET requests</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">)</span>
+<div class="viewcode-block" id="Task.done"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.done">[docs]</a>    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark task as done</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+</div>
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">CANCELLED</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">get_absolute_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FlowRuntimeError</span><span class="p">(</span><span class="s">&quot;Can&#39;t save task with intermediate status - PREPARED&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flow_task_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">task_type</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Task</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mikhail Podgurskiy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
