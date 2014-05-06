@@ -134,15 +134,15 @@
 
     <span class="k">def</span> <span class="nf">_in_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Ensure that we have primary key and that&#39;s we are safe to create referencied models</span>
+<span class="sd">        Ensure that we have primary key and that we are safe to create referenced models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span>
 
     <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
 <div class="viewcode-block" id="Task.assign"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">external_task_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Tasks that perform some activity should be assotiated with</span>
-<span class="sd">        task owner user or background task id</span>
+<span class="sd">        Tasks that perform some activity should be associated with</span>
+<span class="sd">        the task owner user or background task id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">user</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">external_task_id</span> <span class="o">=</span> <span class="n">external_task_id</span>
@@ -150,23 +150,23 @@
     <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">ASSIGNED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">)</span>
 <div class="viewcode-block" id="Task.prepare"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Task going to be started. Task could be initialized several times (probably on GET request)</span>
-<span class="sd">        Initialized tasks could not be saved</span>
+<span class="sd">        Task is going to be started. Task can be initialized several times (probably on GET request).</span>
+<span class="sd">        Initialized tasks could not be saved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 </div>
     <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">[</span><span class="n">_in_db</span><span class="p">])</span>
 <div class="viewcode-block" id="Task.start"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Task that non involves user view interaction could be marked as started.</span>
-<span class="sd">        User view task only preprared but not started, b/c we do not do hit db on GET requests</span>
+<span class="sd">        Task that does not involve user view interaction could be marked as started.</span>
+<span class="sd">        User view task is only prepared but not started, b/c we do not hit db on GET requests.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 </div>
     <span class="nd">@transition</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS</span><span class="o">.</span><span class="n">PREPARED</span><span class="p">,</span> <span class="n">STATUS</span><span class="o">.</span><span class="n">STARTED</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">STATUS</span><span class="o">.</span><span class="n">FINISHED</span><span class="p">)</span>
 <div class="viewcode-block" id="Task.done"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task.done">[docs]</a>    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Mark task as done</span>
+<span class="sd">        Mark task as done.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 </div>

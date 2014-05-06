@@ -84,8 +84,8 @@ and setup task, dependenices, persistance, user rights checking and interface se
 
 <p>Each flow could contains several flow tasks. Flow task represents declaration
 of what should be performed on this step, and what next steps should be activated.</p>
-<p>Flow have no specific declaration of task transitions, and all logic of task activation
-belongs to tsk itself. This makes Flow code close to well-known BPMN notation, and
+<p>Flow does not have specific declaration of task transitions, and all logic of task activation
+belongs to the task itself. This makes Flow code close to well-known BPMN notation, and
 helps to convert it to BPMN and vise versa.</p>
 <p>Flow class should have at least one of <a class="reference internal" href="flow_tasks.html#viewflow.flow.Start" title="viewflow.flow.Start"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.flow.Start</span></tt></a> task and at least one of
 <a class="reference internal" href="flow_tasks.html#viewflow.flow.End" title="viewflow.flow.End"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.flow.End</span></tt></a></p>
@@ -113,18 +113,18 @@ helps to convert it to BPMN and vise versa.</p>
 
 </dd></dl>
 
-<p>See <a class="reference internal" href="flow_tasks.html"><em>Flow Tasks</em></a> documentation for list of available tasks</p>
+<p>See <a class="reference internal" href="flow_tasks.html"><em>Flow Tasks</em></a> documentation for list of all available tasks.</p>
 </div>
 <div class="section" id="activation">
 <h2>Activation<a class="headerlink" href="#activation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="viewflow.activation.Activation">
 <em class="property">class </em><tt class="descclassname">viewflow.activation.</tt><tt class="descname">Activation</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/viewflow/activation.html#Activation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.activation.Activation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activation responsible for managing livecycle and persistance of flow task instance</p>
+<dd><p>Activation is responsible for managing livecycle and persistance of flow task instance</p>
 <dl class="classmethod">
 <dt id="viewflow.activation.Activation.activate">
 <em class="property">classmethod </em><tt class="descname">activate</tt><big>(</big><em>flow_task</em>, <em>prev_activation</em>, <em>token</em><big>)</big><a class="reference internal" href="_modules/viewflow/activation.html#Activation.activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.activation.Activation.activate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instanciate and persist new flow task</p>
+<dd><p>Instantiate and persist new flow task.</p>
 </dd></dl>
 
 <dl class="method">
@@ -138,8 +138,8 @@ helps to convert it to BPMN and vise versa.</p>
 </div>
 <div class="section" id="models">
 <h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
-<p>django-viewflow provides base model for tracking process state. In most cases you should
-subclass <a class="reference internal" href="#viewflow.models.Process" title="viewflow.models.Process"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.models.Process</span></tt></a> to add additinal data fields.</p>
+<p>django-viewflow provides base model for tracking the process state. In most cases you should
+subclass <a class="reference internal" href="#viewflow.models.Process" title="viewflow.models.Process"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.models.Process</span></tt></a> to add additional data fields.</p>
 <p>In case if you need to track some execution info or add logging, you can do it by
 extending <a class="reference internal" href="#viewflow.models.Task" title="viewflow.models.Task"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.models.Task</span></tt></a></p>
 <dl class="class">
@@ -149,28 +149,28 @@ extending <a class="reference internal" href="#viewflow.models.Task" title="view
 <dl class="method">
 <dt id="viewflow.models.Task.assign">
 <tt class="descname">assign</tt><big>(</big><em>user=None</em>, <em>external_task_id=None</em><big>)</big><a class="reference internal" href="_modules/viewflow/models.html#Task.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.models.Task.assign" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tasks that perform some activity should be assotiated with
-task owner user or background task id</p>
+<dd><p>Tasks that perform some activity should be associated with
+the task owner user or background task id.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="viewflow.models.Task.done">
 <tt class="descname">done</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/models.html#Task.done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.models.Task.done" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mark task as done</p>
+<dd><p>Mark task as done.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="viewflow.models.Task.prepare">
 <tt class="descname">prepare</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/models.html#Task.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.models.Task.prepare" title="Permalink to this definition">¶</a></dt>
-<dd><p>Task going to be started. Task could be initialized several times (probably on GET request)
-Initialized tasks could not be saved</p>
+<dd><p>Task is going to be started. Task can be initialized several times (probably on GET request).
+Initialized tasks could not be saved.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="viewflow.models.Task.start">
 <tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/models.html#Task.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.models.Task.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Task that non involves user view interaction could be marked as started.
-User view task only preprared but not started, b/c we do not do hit db on GET requests</p>
+<dd><p>Task that does not involve user view interaction could be marked as started.
+User view task is only prepared but not started, b/c we do not hit db on GET requests.</p>
 </dd></dl>
 
 </dd></dl>
@@ -189,10 +189,10 @@ User view task only preprared but not started, b/c we do not do hit db on GET re
 <tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">flow_start_view</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#flow_start_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.flow_start_view" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator for start views, creates and initializes start activation</p>
 <dl class="docutils">
-<dt>Expects view with signature</dt>
+<dt>Expects view with the signature</dt>
 <dd><blockquote class="first">
 <div>:: (request, activation, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</div></blockquote>
-<p>or CBV view that implemnts ViewActivation, in this case, dispatch
+<p>or CBV view that implements ViewActivation, in this case, dispatch
 with would be called with</p>
 <blockquote class="last">
 <div>:: (request, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</div></blockquote>
@@ -205,7 +205,7 @@ with would be called with</p>
 <dl class="class">
 <dt id="viewflow.flow.start.StartViewMixin">
 <em class="property">class </em><tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">StartViewMixin</tt><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mixin for start views, that not implements activation interface</p>
+<dd><p>Mixin for start views, that do not implement activation interface</p>
 <dl class="attribute">
 <dt id="viewflow.flow.start.StartViewMixin.dispatch">
 <tt class="descname">dispatch</tt><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.dispatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.dispatch" title="Permalink to this definition">¶</a></dt>
@@ -228,7 +228,7 @@ with would be called with</p>
 <dt id="viewflow.flow.start.StartViewMixin.get_template_names">
 <tt class="descname">get_template_names</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.get_template_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get template names, first <cite>app_name/flow/start.html</cite> would be checked,
-and if missed, standard <cite>viewflow/flow/start.html</cite> would be used</p>
+and if it is missing, standard <cite>viewflow/flow/start.html</cite> will be used</p>
 </dd></dl>
 
 </dd></dl>
@@ -266,7 +266,7 @@ implements <tt class="xref py py-class docutils literal"><span class="pre">viewf
 <dt id="viewflow.flow.start.StartView.get_template_names">
 <tt class="descname">get_template_names</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.get_template_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get template names, first <cite>app_name/flow/start.html</cite> would be checked,
-and if missed, standard <cite>viewflow/flow/start.html</cite> would be used</p>
+and if it is missing, standard <cite>viewflow/flow/start.html</cite> will be used</p>
 </dd></dl>
 
 </dd></dl>
@@ -274,12 +274,12 @@ and if missed, standard <cite>viewflow/flow/start.html</cite> would be used</p>
 <dl class="function">
 <dt id="viewflow.flow.view.flow_view">
 <tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">flow_view</tt><big>(</big><em>**lock_args</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/view.html#flow_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.flow_view" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator that locks and runs the flow view in transaction</p>
+<dd><p>Decorator that locks and runs the flow view in transaction.</p>
 <dl class="docutils">
-<dt>Expects view with signature</dt>
+<dt>Expects view with the signature</dt>
 <dd><blockquote class="first">
 <div>:: (request, activation, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs)</div></blockquote>
-<p>or CBV view that implemnts ViewActivation, in this case, dispatch
+<p>or CBV view that implements ViewActivation, in this case, dispatch
 with would be called with</p>
 <blockquote class="last">
 <div>:: (request, <a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs)</div></blockquote>
@@ -292,7 +292,7 @@ with would be called with</p>
 <dl class="class">
 <dt id="viewflow.flow.view.TaskViewMixin">
 <em class="property">class </em><tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">TaskViewMixin</tt><a class="reference internal" href="_modules/viewflow/flow/view.html#TaskViewMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.TaskViewMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mixin for task views, that not implements activation interface</p>
+<dd><p>Mixin for task views, that do not implement activation interface</p>
 </dd></dl>
 
 <dl class="class">
@@ -304,8 +304,8 @@ with would be called with</p>
 </div>
 <div class="section" id="urls">
 <h2>Urls<a class="headerlink" href="#urls" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="#viewflow.base.Flow" title="viewflow.base.Flow"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.base.Flow</span></tt></a> collects all urls required by View tasks, just
-include it in urlpatters</p>
+<p><a class="reference internal" href="#viewflow.base.Flow" title="viewflow.base.Flow"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.base.Flow</span></tt></a> collects all urls required by View tasks, you just
+have to include it in urlpatters</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span>
       <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^myflow/&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="n">MyFlow</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">urls</span><span class="p">)))</span>
 </pre></div>

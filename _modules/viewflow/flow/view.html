@@ -62,11 +62,11 @@
 
 <div class="viewcode-block" id="flow_view"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.view.flow_view">[docs]</a><span class="k">def</span> <span class="nf">flow_view</span><span class="p">(</span><span class="o">**</span><span class="n">lock_args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Decorator that locks and runs the flow view in transaction</span>
+<span class="sd">    Decorator that locks and runs the flow view in transaction.</span>
 
-<span class="sd">    Expects view with signature</span>
+<span class="sd">    Expects view with the signature</span>
 <span class="sd">             :: (request, activation, **kwargs)</span>
-<span class="sd">      or CBV view that implemnts ViewActivation, in this case, dispatch</span>
+<span class="sd">      or CBV view that implements ViewActivation, in this case, dispatch</span>
 <span class="sd">      with would be called with</span>
 <span class="sd">             :: (request, **kwargs)</span>
 
@@ -92,7 +92,7 @@
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">                    Function based view or CBV without ViewActvation interface implemented</span>
+<span class="sd">                    Function based view or CBV without ViewActvation interface implementation</span>
 <span class="sd">                    &quot;&quot;&quot;</span>
                     <span class="n">activation</span> <span class="o">=</span> <span class="n">flow_task</span><span class="o">.</span><span class="n">activation_cls</span><span class="p">()</span>
                     <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
@@ -100,8 +100,8 @@
 
         <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">instancetype</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            If we decoration method on CBV that have StartActivation interface,</span>
-<span class="sd">            no custom activation required</span>
+<span class="sd">            If we decorate method on CBV that implements StartActivation interface,</span>
+<span class="sd">            no custom activation is required.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span>
@@ -146,7 +146,7 @@
 
 <div class="viewcode-block" id="TaskViewMixin"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.view.TaskViewMixin">[docs]</a><span class="k">class</span> <span class="nc">TaskViewMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mixin for task views, that not implements activation interface</span>
+<span class="sd">    Mixin for task views, that do not implement activation interface</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TaskViewMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
