@@ -275,18 +275,10 @@ and if it is missing, standard <cite>viewflow/flow/start.html</cite> will be use
 <dt id="viewflow.flow.view.flow_view">
 <tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">flow_view</tt><big>(</big><em>**lock_args</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/view.html#flow_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.flow_view" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator that locks and runs the flow view in transaction.</p>
-<dl class="docutils">
-<dt>Expects view with the signature</dt>
-<dd><blockquote class="first">
-<div>:: (request, activation, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs)</div></blockquote>
-<p>or CBV view that implements ViewActivation, in this case, dispatch
-with would be called with</p>
-<blockquote class="last">
-<div>:: (request, <a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs)</div></blockquote>
-</dd>
-<dt>Returns</dt>
-<dd>:: (request, flow_task, process_pk, task_pk, <a href="#id11"><span class="problematic" id="id12">**</span></a>kwargs)</dd>
-</dl>
+<p>Expects view with the signature <cite>(request, activation, **kwargs)</cite>
+or CBV view that implements ViewActivation, in this case, dispatch
+with would be called with <cite>(request, **kwargs)</cite></p>
+<p>Returns <cite>(request, flow_task, process_pk, task_pk, **kwargs)</cite></p>
 </dd></dl>
 
 <dl class="class">

@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="django-viewflow 0.1.0 documentation" href="index.html" />
-    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="next" title="Locking" href="locking.html" />
     <link rel="prev" title="Core concepts" href="core_concepts.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="locking.html" title="Locking"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="core_concepts.html" title="Core concepts"
@@ -134,6 +134,16 @@ track when task was started and other task perfomance statictics:</p>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="viewflow.flow.flow_view">
+<tt class="descclassname">viewflow.flow.</tt><tt class="descname">flow_view</tt><big>(</big><em>**lock_args</em><big>)</big><a class="headerlink" href="#viewflow.flow.flow_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that locks and runs the flow view in transaction.</p>
+<p>Expects view with the signature <cite>(request, activation, **kwargs)</cite>
+or CBV view that implements ViewActivation, in this case, dispatch
+with would be called with <cite>(request, **kwargs)</cite></p>
+<p>Returns <cite>(request, flow_task, process_pk, task_pk, **kwargs)</cite></p>
+</dd></dl>
+
 </div>
 <div class="section" id="job">
 <h2>Job<a class="headerlink" href="#job" title="Permalink to this headline">¶</a></h2>
@@ -146,6 +156,19 @@ track when task was started and other task perfomance statictics:</p>
     <span class="o">.</span><span class="n">Next</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="viewflow.flow.flow_job">
+<tt class="descclassname">viewflow.flow.</tt><tt class="descname">flow_job</tt><big>(</big><em>**lock_args</em><big>)</big><a class="headerlink" href="#viewflow.flow.flow_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that prepares celery task for execution</p>
+<p>Makes celery job function with following signature
+<cite>(flow_task-strref, process_pk, task_pk, **kwargs)</cite></p>
+<p>Expects actual celery job function have following signature <cite>(activation, **kwargs)</cite>
+If celery task class implements activation interface, job function
+called without activation instance <cite>(**kwargs)</cite></p>
+<p>Process instance is locked only before and after function execution.
+Please avoid any process state modification during the celery job.</p>
 </dd></dl>
 
 </div>
@@ -239,8 +262,8 @@ track when task was started and other task perfomance statictics:</p>
   <p class="topless"><a href="core_concepts.html"
                         title="previous chapter">Core concepts</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="examples.html"
-                        title="next chapter">Examples</a></p>
+  <p class="topless"><a href="locking.html"
+                        title="next chapter">Locking</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/flow_tasks.txt"
@@ -270,7 +293,7 @@ track when task was started and other task perfomance statictics:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="locking.html" title="Locking"
              >next</a> |</li>
         <li class="right" >
           <a href="core_concepts.html" title="Core concepts"

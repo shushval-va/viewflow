@@ -44,21 +44,73 @@
           <div class="body">
             
   <h1>Source code for viewflow.activation</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
 <span class="kn">from</span> <span class="nn">celery.utils</span> <span class="kn">import</span> <span class="n">uuid</span>
+
 <span class="kn">from</span> <span class="nn">viewflow</span> <span class="kn">import</span> <span class="n">signals</span>
 <span class="kn">from</span> <span class="nn">viewflow.fields</span> <span class="kn">import</span> <span class="n">get_task_ref</span>
+
+
+<span class="n">_context_stack</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">local</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thread-local activation context, dynamically scoped</span>
+
+<span class="sd">    :keyword propagate_exception: If True on activation fails exception would be propagated to previous activalion,</span>
+<span class="sd">    if False, current task activation would be marked as failed</span>
+
+<span class="sd">    Usage ::</span>
+
+<span class="sd">        with Context(propagate_exception=False):</span>
+<span class="sd">             print(context.propagate_exception)  # prints &#39;False&#39;</span>
+<span class="sd">        print(context.propagate_exception)  # prints default &#39;True&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_context_data</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+        <span class="k">for</span> <span class="n">scope</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">scope</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
+            <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_context_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
+            <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Context</span><span class="p">()</span>
+
+
+<span class="n">context</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">propagate_exception</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Activation"><a class="viewcode-back" href="../../core_concepts.html#viewflow.activation.Activation">[docs]</a><span class="k">class</span> <span class="nc">Activation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Activation is responsible for managing livecycle and persistance of flow task instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Activation should be available for instance without any constructor parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
         <span class="nb">super</span><span class="p">(</span><span class="n">Activation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Activation.activate_next"><a class="viewcode-back" href="../../core_concepts.html#viewflow.activation.Activation.activate_next">[docs]</a>    <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -222,6 +274,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Activation for long-running background celery tasks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fail_on_children_error</span> <span class="o">=</span> <span class="bp">False</span>
 
     <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">external_task_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -247,11 +300,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="n">signals</span><span class="o">.</span><span class="n">task_started</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">error</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_failed</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">exeception</span><span class="o">=</span><span class="n">exc</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Celery task finished with `result`, finishes the flow task</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">JobActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">Context</span><span class="p">(</span><span class="n">propagate_exception</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">JobActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If Job successfully completed, nonext task acivation failure can&#39;t drop this</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Context</span><span class="p">(</span><span class="n">propagate_exception</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">JobActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">activate_next</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">flow_task</span><span class="p">,</span> <span class="n">prev_activation</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
@@ -308,6 +374,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">error</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">signals</span><span class="o">.</span><span class="n">task_failed</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">exeception</span><span class="o">=</span><span class="n">exc</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -334,8 +405,23 @@
         <span class="n">activation</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
         <span class="n">activation</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
         <span class="n">activation</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
-        <span class="n">activation</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-        <span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">propagate_exception</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Any execution execption would be propagated back,</span>
+<span class="sd">            assume that rolback will happens and no task activation would be stored</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">activation</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+            <span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            On error, save the task and not propagate exception on top</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">(</span><span class="n">savepoint</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                    <span class="n">activation</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">activation</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">activation</span>
 
