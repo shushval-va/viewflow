@@ -6,9 +6,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Core concepts &mdash; django-viewflow 0.1.0 documentation</title>
+    <title>Core concepts &mdash; django-viewflow documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="django-viewflow 0.1.0 documentation" href="index.html" />
+    <link rel="top" title="django-viewflow documentation" href="index.html" />
     <link rel="next" title="Flow tasks" href="flow_tasks.html" />
     <link rel="prev" title="django-viewflow" href="index.html" /> 
   </head>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="index.html" title="django-viewflow"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">django-viewflow documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -188,18 +188,10 @@ User view task is only prepared but not started, b/c we do not hit db on GET req
 <dt id="viewflow.flow.start.flow_start_view">
 <tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">flow_start_view</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#flow_start_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.flow_start_view" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator for start views, creates and initializes start activation</p>
-<dl class="docutils">
-<dt>Expects view with the signature</dt>
-<dd><blockquote class="first">
-<div>:: (request, activation, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</div></blockquote>
-<p>or CBV view that implements ViewActivation, in this case, dispatch
-with would be called with</p>
-<blockquote class="last">
-<div>:: (request, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</div></blockquote>
-</dd>
-<dt>Returns</dt>
-<dd>:: (request, flow_task, <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs)</dd>
-</dl>
+<p>Expects view with the signature <cite>(request, activation, **kwargs)</cite>
+or CBV view that implements ViewActivation, in this case, dispatch
+with would be called with <cite>(request, **kwargs)</cite></p>
+<p>Returns <cite>(request, flow_task, **kwargs)</cite></p>
 </dd></dl>
 
 <dl class="class">
@@ -363,7 +355,7 @@ have to include it in urlpatters</p>
         <li class="right" >
           <a href="index.html" title="django-viewflow"
              >previous</a> |</li>
-        <li><a href="index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">django-viewflow documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

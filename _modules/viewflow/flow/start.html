@@ -6,9 +6,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>viewflow.flow.start &mdash; django-viewflow 0.1.0 documentation</title>
+    <title>viewflow.flow.start &mdash; django-viewflow documentation</title>
     
-    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="django-viewflow 0.1.0 documentation" href="../../../index.html" />
+    <link rel="top" title="django-viewflow documentation" href="../../../index.html" />
     <link rel="up" title="viewflow.flow" href="../flow.html" /> 
   </head>
   <body>
@@ -33,7 +33,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">django-viewflow documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../flow.html" accesskey="U">viewflow.flow</a> &raquo;</li> 
       </ul>
@@ -64,14 +64,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Decorator for start views, creates and initializes start activation</span>
 
-<span class="sd">    Expects view with the signature</span>
-<span class="sd">             :: (request, activation, **kwargs)</span>
-<span class="sd">      or CBV view that implements ViewActivation, in this case, dispatch</span>
-<span class="sd">      with would be called with</span>
-<span class="sd">             :: (request, **kwargs)</span>
+<span class="sd">    Expects view with the signature `(request, activation, **kwargs)`</span>
+<span class="sd">    or CBV view that implements ViewActivation, in this case, dispatch</span>
+<span class="sd">    with would be called with `(request, **kwargs)`</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">             :: (request, flow_task, **kwargs)</span>
+<span class="sd">    Returns `(request, flow_task, **kwargs)`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">class</span> <span class="nc">StartViewDecorator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -395,7 +392,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../../../index.html">django-viewflow 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">django-viewflow documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../flow.html" >viewflow.flow</a> &raquo;</li> 
       </ul>
