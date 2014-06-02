@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="django-viewflow documentation" href="index.html" />
-    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="next" title="Administration" href="administration.html" />
     <link rel="prev" title="Flow tasks" href="flow_tasks.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="administration.html" title="Administration"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="flow_tasks.html" title="Flow tasks"
@@ -59,7 +59,7 @@ locks and instansiate database transaction.</p>
 <dl class="function">
 <dt id="viewflow.lock.no_lock">
 <tt class="descclassname">viewflow.lock.</tt><tt class="descname">no_lock</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/lock.html#no_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.lock.no_lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>By default Flow have no lockig</p>
+<dd><p>By default Flow has no locking.</p>
 </dd></dl>
 
 <dl class="function">
@@ -67,14 +67,14 @@ locks and instansiate database transaction.</p>
 <tt class="descclassname">viewflow.lock.</tt><tt class="descname">select_for_update_lock</tt><big>(</big><em>nowait=True</em>, <em>attempts=5</em><big>)</big><a class="reference internal" href="_modules/viewflow/lock.html#select_for_update_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.lock.select_for_update_lock" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses <cite>select ... for update</cite> on process instance row for locking,
 bound to database transaction.</p>
-<p>Recomended for use with PostgreSQL</p>
+<p>Recommended for use with PostgreSQL.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="viewflow.lock.cache_lock">
 <tt class="descclassname">viewflow.lock.</tt><tt class="descname">cache_lock</tt><big>(</big><em>attempts=5</em>, <em>expires=120</em><big>)</big><a class="reference internal" href="_modules/viewflow/lock.html#cache_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.lock.cache_lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use it if primary cache backend have transactional <cite>add</cite> functionality,
-like memcached</p>
+<dd><p>Use it if primary cache backend has transactional <cite>add</cite> functionality,
+like <cite>memcached</cite>.</p>
 </dd></dl>
 
 </div>
@@ -89,8 +89,8 @@ like memcached</p>
   <p class="topless"><a href="flow_tasks.html"
                         title="previous chapter">Flow tasks</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="examples.html"
-                        title="next chapter">Examples</a></p>
+  <p class="topless"><a href="administration.html"
+                        title="next chapter">Administration</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/locking.txt"
@@ -120,7 +120,7 @@ like memcached</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="administration.html" title="Administration"
              >next</a> |</li>
         <li class="right" >
           <a href="flow_tasks.html" title="Flow tasks"

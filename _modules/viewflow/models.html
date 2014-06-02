@@ -94,6 +94,14 @@
     <span class="k">def</span> <span class="nf">active_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">finished__isnull</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;created&#39;</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;&lt;{}/{}&gt; - {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_status_display</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;Process {}&gt; - {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_status_display</span><span class="p">())</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s">&#39;Process list&#39;</span>
+
 </div>
 <div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../core_concepts.html#viewflow.models.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -189,7 +197,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">flow_task_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">task_type</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">Task</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Task</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;&lt;{}.{}/{}&gt; - {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_status_display</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;Task {}&gt; - {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_status_display</span><span class="p">())</span></div>
 </pre></div>
 
           </div>

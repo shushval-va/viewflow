@@ -142,6 +142,10 @@
             <span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span> <span class="o">=</span> <span class="n">index</span>
             <span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span><span class="p">)</span>
 
+        <span class="c"># done flow setup</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">ready</span><span class="p">()</span>
+
         <span class="k">return</span> <span class="n">new_class</span>
 
 

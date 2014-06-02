@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; django-viewflow documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-viewflow documentation" href="index.html" />
+    <link rel="next" title="Core concepts" href="core_concepts.html" />
+    <link rel="prev" title="django-viewflow" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="core_concepts.html" title="Core concepts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="django-viewflow"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-viewflow documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>django-viewflow requires Python 3.3 or greater and django 1.7:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install django-viewflow
+</pre></div>
+</div>
+<p>And add it into INSTALLED_APPS settings</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">(</span>
+     <span class="o">...</span>
+     <span class="n">viewflow</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s define basic Hello Process where one could start hello world request, another person approves it,
+and as soon as the request is approved it should be send into background.</p>
+<p>Start with process database model definition</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">viewflow.models</span> <span class="kn">import</span> <span class="n">Process</span>
+
+<span class="k">class</span> <span class="nc">HelloworldProcess</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ChatField</span><span class="p">(</span><span class="n">max_lenght</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">approved</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">permissions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s">&#39;can_start_request&#39;</span><span class="p">,</span> <span class="s">&#39;Can start hello world request&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;can_approve_request&#39;</span><span class="p">,</span> <span class="s">&#39;Can approve hello world request&#39;</span><span class="p">)</span>
+        <span class="p">]</span>
+</pre></div>
+</div>
+<p>Define the actual task that says Hello to the World in <cite>task.py</cite></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">celery</span> <span class="kn">import</span> <span class="n">shared_task</span>
+<span class="kn">from</span> <span class="nn">viewflow.flow</span> <span class="kn">import</span> <span class="n">flow_job</span>
+
+<span class="nd">@shared_task</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="nd">@flow_job</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">send_hello_world_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">world</span><span class="p">:</span>
+        <span class="n">world</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">activation</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To make the above code work just put the following flow definition in <cite>flows.py</cite> module from your django application.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">viewflow</span> <span class="kn">import</span> <span class="n">flow</span><span class="p">,</span> <span class="n">lock</span>
+<span class="kn">from</span> <span class="nn">viewflow.base</span> <span class="kn">import</span> <span class="n">this</span><span class="p">,</span> <span class="n">Flow</span>
+<span class="kn">from</span> <span class="nn">viewflow.views</span> <span class="kn">import</span> <span class="n">ProcessView</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">HelloWorldProcess</span>
+
+<span class="k">class</span> <span class="nc">HelloWorldFlow</span><span class="p">(</span><span class="n">Flow</span><span class="p">):</span>
+    <span class="n">process_cls</span> <span class="o">=</span> <span class="n">HelloWorldProcess</span>
+    <span class="n">lock_impl</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">select_for_update_lock</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">Start</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;text&quot;</span><span class="p">])</span> \
+       <span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;helloworld.can_start_request&#39;</span><span class="p">)</span> \
+       <span class="o">.</span><span class="n">Activate</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">hello_world</span><span class="p">)</span>
+
+    <span class="n">approve</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">View</span><span class="p">(</span><span class="n">ProcessView</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;approve&quot;</span><span class="p">])</span> \
+        <span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;helloworld.can_approve_request&#39;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">Next</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">check_approve</span><span class="p">)</span>
+
+    <span class="n">check_approve</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">If</span><span class="p">(</span><span class="n">cond</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">approved</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">OnTrue</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">send</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">OnFalse</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+    <span class="n">send</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">send_hello_world_request</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">Next</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+    <span class="n">end</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">End</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><cite>Flow</cite> class contains all urls required for the task processing.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">include</span>
+<span class="kn">from</span> <span class="nn">.flows</span> <span class="kn">import</span> <span class="n">HelloWorldFlow</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+    <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^helloworld/&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="n">HelloWorldFlow</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">urls</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>That&#8217;s all you need to setup this flow.</p>
+<p>Next, you can see how to define custom views, and meet other concepts of django-viewflow at
+<a class="reference external" href="http://kmmbvnr.github.io/django-viewflow/">http://kmmbvnr.github.io/django-viewflow/</a></p>
+<p>More examples are available in the <cite>tests/examples</cite> directory.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick start</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">django-viewflow</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="core_concepts.html"
+                        title="next chapter">Core concepts</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/introduction.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="core_concepts.html" title="Core concepts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="django-viewflow"
+             >previous</a> |</li>
+        <li><a href="index.html">django-viewflow documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mikhail Podgurskiy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>viewflow.admin &mdash; django-viewflow documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="django-viewflow documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">django-viewflow documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for viewflow.admin</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span><span class="p">,</span> <span class="n">auth</span>
+<span class="kn">from</span> <span class="nn">viewflow.models</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Task</span>
+
+
+<span class="k">class</span> <span class="nc">TaskInline</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">TabularInline</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Task</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;flow_task&#39;</span><span class="p">,</span> <span class="s">&#39;flow_task_type&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">,</span>
+              <span class="s">&#39;owner&#39;</span><span class="p">,</span> <span class="s">&#39;owner_permission&#39;</span><span class="p">,</span> <span class="s">&#39;token&#39;</span><span class="p">,</span>
+              <span class="s">&#39;started&#39;</span><span class="p">,</span> <span class="s">&#39;finished&#39;</span><span class="p">]</span>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;flow_task&#39;</span><span class="p">,</span> <span class="s">&#39;flow_task_type&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;token&#39;</span><span class="p">,</span> <span class="s">&#39;started&#39;</span><span class="p">,</span> <span class="s">&#39;finished&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">has_add_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">has_delete_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="nd">@admin.register</span><span class="p">(</span><span class="n">Process</span><span class="p">)</span>
+<div class="viewcode-block" id="ProcessAdmin"><a class="viewcode-back" href="../../administration.html#viewflow.admin.ProcessAdmin">[docs]</a><span class="k">class</span> <span class="nc">ProcessAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all of viewflow process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">date_hierarchy</span> <span class="o">=</span> <span class="s">&#39;created&#39;</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;pk&#39;</span><span class="p">,</span> <span class="s">&#39;created&#39;</span><span class="p">,</span> <span class="s">&#39;flow_cls&#39;</span><span class="p">,</span> <span class="s">&#39;get_status_display&#39;</span><span class="p">,</span> <span class="s">&#39;participants&#39;</span><span class="p">]</span>
+    <span class="n">list_display_links</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;pk&#39;</span><span class="p">,</span> <span class="s">&#39;created&#39;</span><span class="p">,</span> <span class="s">&#39;flow_cls&#39;</span><span class="p">]</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;flow_cls&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">,</span> <span class="s">&#39;finished&#39;</span><span class="p">]</span>
+    <span class="n">inlines</span> <span class="o">=</span> <span class="p">[</span><span class="n">TaskInline</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">participants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">user_ids</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">task_set</span><span class="o">.</span><span class="n">exclude</span><span class="p">(</span><span class="n">owner__isnull</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s">&#39;owner&#39;</span><span class="p">)</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="n">auth</span><span class="o">.</span><span class="n">get_user_model</span><span class="p">()</span><span class="o">.</span><span class="n">_default_manager</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk__in</span><span class="o">=</span><span class="n">user_ids</span><span class="p">)</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s">&#39;username&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">)</span>
+
+</div>
+<span class="nd">@admin.register</span><span class="p">(</span><span class="n">Task</span><span class="p">)</span>
+<div class="viewcode-block" id="TaskAdmin"><a class="viewcode-back" href="../../administration.html#viewflow.admin.TaskAdmin">[docs]</a><span class="k">class</span> <span class="nc">TaskAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all of viewflow tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">date_hierarchy</span> <span class="o">=</span> <span class="s">&#39;created&#39;</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;pk&#39;</span><span class="p">,</span> <span class="s">&#39;created&#39;</span><span class="p">,</span> <span class="s">&#39;process&#39;</span><span class="p">,</span> <span class="s">&#39;get_status_display&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;owner&#39;</span><span class="p">,</span> <span class="s">&#39;owner_permission&#39;</span><span class="p">,</span> <span class="s">&#39;token&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;started&#39;</span><span class="p">,</span> <span class="s">&#39;finished&#39;</span><span class="p">]</span>
+    <span class="n">list_display_links</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;pk&#39;</span><span class="p">,</span> <span class="s">&#39;created&#39;</span><span class="p">,</span> <span class="s">&#39;process&#39;</span><span class="p">]</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;process&#39;</span><span class="p">,</span> <span class="s">&#39;flow_task&#39;</span><span class="p">,</span> <span class="s">&#39;started&#39;</span><span class="p">,</span> <span class="s">&#39;finished&#39;</span><span class="p">,</span> <span class="s">&#39;previous&#39;</span><span class="p">,</span> <span class="s">&#39;token&#39;</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">django-viewflow documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mikhail Podgurskiy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -68,17 +68,24 @@
 <span class="sd">             print(context.propagate_exception)  # prints &#39;False&#39;</span>
 <span class="sd">        print(context.propagate_exception)  # prints default &#39;True&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_context_data</span> <span class="o">=</span> <span class="n">kwargs</span>
 
     <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">scope</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
+            <span class="n">stack</span> <span class="o">=</span> <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="k">for</span> <span class="n">scope</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">scope</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
@@ -90,10 +97,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_context_stack</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">):</span>
-            <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">_context_stack</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Context</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="n">context</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">propagate_exception</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -314,7 +318,7 @@
 
     <span class="k">def</span> <span class="nf">activate_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        If Job successfully completed, nonext task acivation failure can&#39;t drop this</span>
+<span class="sd">        If Job is successfully completed, next task activation failure can&#39;t drop this</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">Context</span><span class="p">(</span><span class="n">propagate_exception</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">JobActivation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">activate_next</span><span class="p">()</span>
@@ -408,8 +412,8 @@
 
         <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">propagate_exception</span><span class="p">:</span>
             <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Any execution execption would be propagated back,</span>
-<span class="sd">            assume that rolback will happens and no task activation would be stored</span>
+<span class="sd">            Any execution exception would be propagated back,</span>
+<span class="sd">            assume that rollback will happens and no task activation would be stored</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">activation</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
             <span class="n">activation</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>

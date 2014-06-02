@@ -60,7 +60,7 @@
 
 <div class="viewcode-block" id="no_lock"><a class="viewcode-back" href="../../locking.html#viewflow.lock.no_lock">[docs]</a><span class="k">def</span> <span class="nf">no_lock</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    By default Flow have no lockig</span>
+<span class="sd">    By default Flow has no locking.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@contextmanager</span>
     <span class="k">def</span> <span class="nf">lock</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">process_pk</span><span class="p">):</span>
@@ -74,7 +74,7 @@
 <span class="sd">    Uses `select ... for update` on process instance row for locking,</span>
 <span class="sd">    bound to database transaction.</span>
 
-<span class="sd">    Recomended for use with PostgreSQL</span>
+<span class="sd">    Recommended for use with PostgreSQL.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@contextmanager</span>
     <span class="k">def</span> <span class="nf">lock</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">process_pk</span><span class="p">):</span>
@@ -102,8 +102,8 @@
 </div>
 <div class="viewcode-block" id="cache_lock"><a class="viewcode-back" href="../../locking.html#viewflow.lock.cache_lock">[docs]</a><span class="k">def</span> <span class="nf">cache_lock</span><span class="p">(</span><span class="n">attempts</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="mi">120</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Use it if primary cache backend have transactional `add` functionality,</span>
-<span class="sd">    like memcached</span>
+<span class="sd">    Use it if primary cache backend has transactional `add` functionality,</span>
+<span class="sd">    like `memcached`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@contextmanager</span>
     <span class="k">def</span> <span class="nf">lock</span><span class="p">(</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">process_pk</span><span class="p">):</span>

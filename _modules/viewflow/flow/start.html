@@ -57,7 +57,7 @@
 
 <span class="kn">from</span> <span class="nn">viewflow.activation</span> <span class="kn">import</span> <span class="n">StartActivation</span>
 <span class="kn">from</span> <span class="nn">viewflow.exceptions</span> <span class="kn">import</span> <span class="n">FlowRuntimeError</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.base</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Edge</span>
+<span class="kn">from</span> <span class="nn">viewflow.flow.base</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Edge</span><span class="p">,</span> <span class="n">PermissionMixin</span>
 
 
 <div class="viewcode-block" id="flow_start_view"><a class="viewcode-back" href="../../../core_concepts.html#viewflow.flow.start.flow_start_view">[docs]</a><span class="k">def</span> <span class="nf">flow_start_view</span><span class="p">():</span>
@@ -66,7 +66,7 @@
 
 <span class="sd">    Expects view with the signature `(request, activation, **kwargs)`</span>
 <span class="sd">    or CBV view that implements ViewActivation, in this case, dispatch</span>
-<span class="sd">    with would be called with `(request, **kwargs)`</span>
+<span class="sd">    would be called with `(request, **kwargs)`</span>
 
 <span class="sd">    Returns `(request, flow_task, **kwargs)`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -236,7 +236,7 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 </div></div>
-<span class="k">class</span> <span class="nc">Start</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Start</span><span class="p">(</span><span class="n">PermissionMixin</span><span class="p">,</span> <span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Start process event</span>
 
@@ -264,8 +264,8 @@
 <span class="sd">                  return redirect(&#39;/&#39;)</span>
 <span class="sd">             return render(request, {&#39;activation&#39;: activation, &#39;form&#39;: form})</span>
 
-<span class="sd">    Ensure to include `{{ activation.management_form }}` insude template, to proper</span>
-<span class="sd">    track when task was started and other task perfomance statictics::</span>
+<span class="sd">    Ensure to include `{{ activation.management_form }}` inside template, to proper</span>
+<span class="sd">    track when task was started and other task performance statistics::</span>
 
 <span class="sd">             &lt;form method=&quot;POST&quot;&gt;</span>
 <span class="sd">                  {{ form }}</span>
@@ -281,6 +281,7 @@
 <span class="sd">        Accepts view callable or CBV View class with view kwargs,</span>
 <span class="sd">        if CBV view implements StartActivation, it used as activation_cls</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_args</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">view_or_cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
@@ -294,10 +295,6 @@
 
         <span class="nb">super</span><span class="p">(</span><span class="n">Start</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">activation_cls</span><span class="o">=</span><span class="n">activation_cls</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span> <span class="o">=</span> <span class="bp">None</span>
-
     <span class="k">def</span> <span class="nf">_outgoing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">next_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activate_next</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">Edge</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">next_node</span><span class="p">,</span> <span class="n">edge_class</span><span class="o">=</span><span class="s">&#39;next&#39;</span><span class="p">)</span>
@@ -309,27 +306,15 @@
     <span class="k">def</span> <span class="nf">Available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">owner_kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make process start action available for the User</span>
-<span class="sd">        accepts user lookup kwargs or callable predicate :: User -&gt; bool</span>
+<span class="sd">        accepts user lookup kwargs or callable predicate :: User -&gt; bool::</span>
 
-<span class="sd">        .Available(username=&#39;employee&#39;)</span>
-<span class="sd">        .Available(lambda user: user.is_super_user)</span>
+<span class="sd">            .Available(username=&#39;employee&#39;)</span>
+<span class="sd">            .Available(lambda user: user.is_super_user)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">owner</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="n">owner</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_owner</span> <span class="o">=</span> <span class="n">owner_kwargs</span>
-        <span class="k">return</span> <span class="bp">self</span>
-
-    <span class="k">def</span> <span class="nf">Permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="n">assign_view</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Make process start available for users with specific permission</span>
-<span class="sd">        acceps permissions name or callable predicate :: User -&gt; bool</span>
-
-<span class="sd">        .Permission(&#39;my_app.can_approve&#39;)</span>
-<span class="sd">        .Permission(lambda user: user.department_id is not None)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_owner_permission</span> <span class="o">=</span> <span class="n">permission</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_view</span> <span class="o">=</span> <span class="n">assign_view</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@property</span>
