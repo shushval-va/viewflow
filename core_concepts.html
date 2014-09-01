@@ -91,7 +91,7 @@ helps to convert it to BPMN and vise versa.</p>
 <a class="reference internal" href="flow_tasks.html#viewflow.flow.End" title="viewflow.flow.End"><tt class="xref py py-class docutils literal"><span class="pre">viewflow.flow.End</span></tt></a></p>
 <dl class="class">
 <dt id="viewflow.flow.Node">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.</tt><tt class="descname">Node</tt><big>(</big><em>activation_cls=None</em><big>)</big><a class="headerlink" href="#viewflow.flow.Node" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">viewflow.flow.</tt><tt class="descname">Node</tt><big>(</big><em>activation_cls=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#viewflow.flow.Node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for flow task</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -184,107 +184,6 @@ User view task is only prepared but not started, b/c we do not hit db on GET req
 </div>
 <div class="section" id="views">
 <h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="viewflow.flow.start.flow_start_view">
-<tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">flow_start_view</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#flow_start_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.flow_start_view" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator for start views, creates and initializes start activation</p>
-<p>Expects view with the signature <cite>(request, activation, **kwargs)</cite>
-or CBV view that implements ViewActivation, in this case, dispatch
-would be called with <cite>(request, **kwargs)</cite></p>
-<p>Returns <cite>(request, flow_task, **kwargs)</cite></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="viewflow.flow.start.StartViewMixin">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">StartViewMixin</tt><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mixin for start views, that do not implement activation interface</p>
-<dl class="attribute">
-<dt id="viewflow.flow.start.StartViewMixin.dispatch">
-<tt class="descname">dispatch</tt><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.dispatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.dispatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check user permissions, and prepare flow to execution</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartViewMixin.get_context_data">
-<tt class="descname">get_context_data</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.get_context_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds <cite>activation</cite> to context data</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartViewMixin.get_success_url">
-<tt class="descname">get_success_url</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.get_success_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.get_success_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Redirects to flow index page</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartViewMixin.get_template_names">
-<tt class="descname">get_template_names</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartViewMixin.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartViewMixin.get_template_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get template names, first <cite>app_name/flow/start.html</cite> would be checked,
-and if it is missing, standard <cite>viewflow/flow/start.html</cite> will be used</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="viewflow.flow.start.StartView">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.start.</tt><tt class="descname">StartView</tt><big>(</big><em>management_form_cls=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic start view, allows to modify subset of process fields,
-implements <tt class="xref py py-class docutils literal"><span class="pre">viewflow.activation.StartActivation</span></tt> interface</p>
-<dl class="attribute">
-<dt id="viewflow.flow.start.StartView.dispatch">
-<tt class="descname">dispatch</tt><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.dispatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.dispatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check user permissions, and prepare flow to execution</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartView.get_context_data">
-<tt class="descname">get_context_data</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.get_context_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds <cite>activation</cite> to context data</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartView.get_object">
-<tt class="descname">get_object</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.get_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.get_object" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns process instance</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartView.get_success_url">
-<tt class="descname">get_success_url</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.get_success_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.get_success_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Redirects to flow index page</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="viewflow.flow.start.StartView.get_template_names">
-<tt class="descname">get_template_names</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/flow/start.html#StartView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.start.StartView.get_template_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get template names, first <cite>app_name/flow/start.html</cite> would be checked,
-and if it is missing, standard <cite>viewflow/flow/start.html</cite> will be used</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="viewflow.flow.view.flow_view">
-<tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">flow_view</tt><big>(</big><em>**lock_args</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/view.html#flow_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.flow_view" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator that locks and runs the flow view in transaction.</p>
-<p>Expects view with the signature <cite>(request, activation, **kwargs)</cite>
-or CBV view that implements ViewActivation, in this case, dispatch
-with would be called with <cite>(request, **kwargs)</cite></p>
-<p>Returns <cite>(request, flow_task, process_pk, task_pk, **kwargs)</cite></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="viewflow.flow.view.TaskViewMixin">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">TaskViewMixin</tt><a class="reference internal" href="_modules/viewflow/flow/view.html#TaskViewMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.TaskViewMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mixin for task views, that do not implement activation interface</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="viewflow.flow.view.ProcessView">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.view.</tt><tt class="descname">ProcessView</tt><big>(</big><em>management_form_cls=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/viewflow/flow/view.html#ProcessView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.flow.view.ProcessView" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shortcut view for task that updates subset of Process model fields</p>
-</dd></dl>
-
 </div>
 <div class="section" id="urls">
 <h2>Urls<a class="headerlink" href="#urls" title="Permalink to this headline">¶</a></h2>

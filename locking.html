@@ -59,7 +59,8 @@ locks and instansiate database transaction.</p>
 <dl class="function">
 <dt id="viewflow.lock.no_lock">
 <tt class="descclassname">viewflow.lock.</tt><tt class="descname">no_lock</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/viewflow/lock.html#no_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#viewflow.lock.no_lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>By default Flow has no locking.</p>
+<dd><p>No pessimistic locking, just execute flow task in transaction.
+Not suitable when you have Join nodes in your flow.</p>
 </dd></dl>
 
 <dl class="function">

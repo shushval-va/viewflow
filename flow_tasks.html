@@ -55,7 +55,7 @@
 <h2>Start<a class="headerlink" href="#start" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="viewflow.flow.Start">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.</tt><tt class="descname">Start</tt><big>(</big><em>view_or_cls=None</em>, <em>activation_cls=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#viewflow.flow.Start" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">viewflow.flow.</tt><tt class="descname">Start</tt><big>(</big><em>view_or_cls=None</em>, <em>activation_cls=None</em>, <em>task_title=None</em>, <em>task_description=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#viewflow.flow.Start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start process event</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">start</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">Start</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;some_process_field&quot;</span><span class="p">])</span> \
@@ -103,7 +103,7 @@ accepts user lookup kwargs or callable predicate :: User -&gt; bool:</p>
 
 <dl class="method">
 <dt id="viewflow.flow.Start.Permission">
-<tt class="descname">Permission</tt><big>(</big><em>permission=None</em>, <em>assign_view=None</em>, <em>auto_create=False</em>, <em>help_text=None</em><big>)</big><a class="headerlink" href="#viewflow.flow.Start.Permission" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">Permission</tt><big>(</big><em>permission=None</em>, <em>auto_create=False</em>, <em>help_text=None</em><big>)</big><a class="headerlink" href="#viewflow.flow.Start.Permission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make process start available for users with specific permission.
 For existing permission accepts permissions name or callable predicate :: User -&gt; bool:</p>
 <div class="highlight-python"><div class="highlight"><pre>.Permission(&#39;processmodel.can_approve&#39;)
@@ -112,11 +112,11 @@ For existing permission accepts permissions name or callable predicate :: User -
 </div>
 <p>Task specific permission could be auto created during migration:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># Creates `processcls_app.can_do_task_processcls` permission</span>
-<span class="n">do_task</span> <span class="o">=</span> <span class="n">View</span><span class="p">()</span><span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="n">auto_create</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">do_task</span> <span class="o">=</span> <span class="n">Start</span><span class="p">()</span><span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="n">auto_create</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="c"># You can specify permission codename and description right here</span>
 <span class="c"># The following creates `processcls_app.can_execure_task` permission</span>
-<span class="n">do_task</span> <span class="o">=</span> <span class="n">View</span><span class="p">()</span><span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;can_execute_task&#39;</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s">&#39;Custom text&#39;</span><span class="p">,</span> <span class="n">auto_create</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">do_task</span> <span class="o">=</span> <span class="n">Start</span><span class="p">()</span><span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;can_execute_task&#39;</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s">&#39;Custom text&#39;</span><span class="p">,</span> <span class="n">auto_create</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -178,10 +178,10 @@ accepts user lookup kwargs or callable :: Process -&gt; User:</p>
 <dl class="method">
 <dt id="viewflow.flow.View.Permission">
 <tt class="descname">Permission</tt><big>(</big><em>permission=None</em>, <em>assign_view=None</em>, <em>auto_create=False</em>, <em>help_text=None</em><big>)</big><a class="headerlink" href="#viewflow.flow.View.Permission" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make process start available for users with specific permission.
-For existing permission accepts permissions name or callable predicate :: User -&gt; bool:</p>
-<div class="highlight-python"><div class="highlight"><pre>.Permission(&#39;processmodel.can_approve&#39;)
-.Permission(lambda user: user.department_id is not None)
+<dd><p>Make task available for users with specific permission,
+aceps permissions name of callable :: Process -&gt; permission_name:</p>
+<div class="highlight-python"><div class="highlight"><pre>.Permission(&#39;my_app.can_approve&#39;)
+.Permission(lambda process: &#39;my_app.department_manager_{}&#39;.format(process.depratment.pk))
 </pre></div>
 </div>
 <p>Task specific permission could be auto created during migration:</p>
@@ -213,17 +213,6 @@ during nexttask activation, database rollback will be performed and no changes w
 <div class="section" id="job">
 <h2>Job<a class="headerlink" href="#job" title="Permalink to this headline">¶</a></h2>
 <p>Job task represents user task performed in background by celery</p>
-<dl class="class">
-<dt id="viewflow.flow.Job">
-<em class="property">class </em><tt class="descclassname">viewflow.flow.</tt><tt class="descname">Job</tt><big>(</big><em>job</em><big>)</big><a class="headerlink" href="#viewflow.flow.Job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Task that runs in background</p>
-<p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">job</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">job</span><span class="p">)</span> \
-    <span class="o">.</span><span class="n">Next</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
 <dl class="function">
 <dt id="viewflow.flow.flow_job">
 <tt class="descclassname">viewflow.flow.</tt><tt class="descname">flow_job</tt><big>(</big><em>**lock_args</em><big>)</big><a class="headerlink" href="#viewflow.flow.flow_job" title="Permalink to this definition">¶</a></dt>

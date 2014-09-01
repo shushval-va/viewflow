@@ -44,12 +44,14 @@
           <div class="body">
             
   <h1>Source code for viewflow.flow</h1><div class="highlight"><pre>
-<span class="kn">from</span> <span class="nn">viewflow.flow.base</span> <span class="kn">import</span> <span class="n">This</span><span class="p">,</span> <span class="n">Node</span>                         <span class="c"># NOQA</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.end</span> <span class="kn">import</span> <span class="n">End</span>                                 <span class="c"># NOQA</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.gates</span> <span class="kn">import</span> <span class="n">If</span><span class="p">,</span> <span class="n">Switch</span><span class="p">,</span> <span class="n">Split</span><span class="p">,</span> <span class="n">Join</span><span class="p">,</span> <span class="n">First</span>    <span class="c"># NOQA</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.job</span> <span class="kn">import</span> <span class="n">Job</span><span class="p">,</span> <span class="n">flow_job</span>                       <span class="c"># NOQA</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.start</span> <span class="kn">import</span> <span class="n">Start</span><span class="p">,</span> <span class="n">flow_start_view</span>            <span class="c"># NOQA</span>
-<span class="kn">from</span> <span class="nn">viewflow.flow.view</span> <span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">flow_view</span>                    <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">This</span><span class="p">,</span> <span class="n">Node</span>                                         <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.end</span> <span class="kn">import</span> <span class="n">End</span>                                                 <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.func</span> <span class="kn">import</span> <span class="n">StartFunction</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Handler</span><span class="p">,</span> <span class="n">flow_func</span>        <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.gates</span> <span class="kn">import</span> <span class="n">If</span><span class="p">,</span> <span class="n">Switch</span><span class="p">,</span> <span class="n">Split</span><span class="p">,</span> <span class="n">Join</span><span class="p">,</span> <span class="n">First</span>                    <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.job</span> <span class="kn">import</span> <span class="n">AbstractJob</span><span class="p">,</span> <span class="n">flow_job</span>                               <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.signal</span> <span class="kn">import</span> <span class="n">StartSignal</span><span class="p">,</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">flow_signal</span>                 <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.start_view</span> <span class="kn">import</span> <span class="n">Start</span><span class="p">,</span> <span class="n">StartViewActivation</span><span class="p">,</span> <span class="n">flow_start_view</span>  <span class="c"># NOQA</span>
+<span class="kn">from</span> <span class="nn">.task_view</span> <span class="kn">import</span> <span class="n">View</span><span class="p">,</span> <span class="n">TaskViewActivation</span><span class="p">,</span> <span class="n">flow_view</span>           <span class="c"># NOQA</span>
 </pre></div>
 
           </div>

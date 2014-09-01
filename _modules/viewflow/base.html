@@ -47,6 +47,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Flow definition</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
 <span class="kn">from</span> <span class="nn">django.apps</span> <span class="kn">import</span> <span class="n">apps</span>
@@ -73,10 +74,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;{}/{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_label</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flow_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">module</span> <span class="o">=</span> <span class="s">&quot;{}.{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
         <span class="n">app_config</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_containing_app_config</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
         <span class="n">subpath</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">app_config</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">__package__</span><span class="o">+</span><span class="s">&#39;.flows.&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s">&quot;{}/{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app_config</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">subpath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">subpath</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;flow&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -102,8 +107,8 @@
 
 
 <span class="k">class</span> <span class="nc">FlowMetaClass</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
-        <span class="n">new_class</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">FlowMetaClass</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">class_name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="n">new_class</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">FlowMetaClass</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">class_name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
 
         <span class="c"># singleton instance</span>
         <span class="n">new_class</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">FlowInstanceDescriptor</span><span class="p">()</span>
@@ -136,11 +141,23 @@
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">node</span><span class="o">.</span><span class="n">flow_cls</span> <span class="o">=</span> <span class="n">new_class</span>
 
-        <span class="c"># index view</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">new_class</span><span class="p">,</span> <span class="s">&#39;index_view&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
-            <span class="kn">from</span> <span class="nn">viewflow.views</span> <span class="kn">import</span> <span class="n">index</span>
-            <span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span> <span class="o">=</span> <span class="n">index</span>
-            <span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">new_class</span><span class="o">.</span><span class="n">index_view</span><span class="p">)</span>
+        <span class="c"># description</span>
+        <span class="k">if</span> <span class="n">new_class</span><span class="o">.</span><span class="n">__doc__</span><span class="p">:</span>
+            <span class="n">docstring</span> <span class="o">=</span> <span class="n">new_class</span><span class="o">.</span><span class="n">__doc__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&#39;process_title&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">docstring</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">new_class</span><span class="o">.</span><span class="n">process_title</span> <span class="o">=</span> <span class="n">docstring</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s">&#39;process_description&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">docstring</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">new_class</span><span class="o">.</span><span class="n">process_description</span> <span class="o">=</span> <span class="n">docstring</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># convert camel case to separate words</span>
+            <span class="n">new_class</span><span class="o">.</span><span class="n">process_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([a-z0-9])([A-Z])&#39;</span><span class="p">,</span> <span class="s">r&#39;\1 \2&#39;</span><span class="p">,</span>
+                                             <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;(.)([A-Z][a-z]+)&#39;</span><span class="p">,</span> <span class="s">r&#39;\1 \2&#39;</span><span class="p">,</span> <span class="n">class_name</span><span class="p">))</span> \
+                <span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;Flow&#39;</span><span class="p">)</span>
+
+        <span class="c"># view process permission</span>
+        <span class="n">process_options</span> <span class="o">=</span> <span class="n">new_class</span><span class="o">.</span><span class="n">process_cls</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="k">if</span> <span class="s">&#39;view&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">process_options</span><span class="o">.</span><span class="n">default_permissions</span><span class="p">:</span>
+            <span class="n">process_options</span><span class="o">.</span><span class="n">default_permissions</span> <span class="o">+=</span> <span class="p">(</span><span class="s">&#39;view&#39;</span><span class="p">,</span> <span class="p">)</span>
 
         <span class="c"># done flow setup</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -164,20 +181,21 @@
     <span class="n">management_form_cls</span> <span class="o">=</span> <span class="n">ActivationDataForm</span>
     <span class="n">lock_impl</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">no_lock</span>
 
+    <span class="n">process_title</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">process_description</span> <span class="o">=</span> <span class="bp">None</span>
+
     <span class="nd">@property</span>
 <div class="viewcode-block" id="Flow.urls"><a class="viewcode-back" href="../../core_concepts.html#viewflow.base.Flow.urls">[docs]</a>    <span class="k">def</span> <span class="nf">urls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides ready to include urlpatterns required for this flow</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">url</span>
-
         <span class="n">node_urls</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^$&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_view</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;flow_cls&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)},</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;index&#39;</span><span class="p">)</span>
         <span class="p">]</span>
 
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="n">url_getter</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;url_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
             <span class="n">url</span> <span class="o">=</span> <span class="n">url_getter</span><span class="p">()</span> <span class="k">if</span> <span class="n">url_getter</span> <span class="k">else</span> <span class="n">node_url</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
                 <span class="n">node_urls</span> <span class="o">+=</span> <span class="n">url</span>
             <span class="k">elif</span> <span class="n">url</span><span class="p">:</span>
@@ -187,7 +205,10 @@
 </div>
     <span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">reverse_impl</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;reverse_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">flow_task</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">reverse_impl</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">if</span> <span class="n">reverse_impl</span> <span class="k">else</span> <span class="n">node_url_reverse</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">reverse_impl</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">if</span> <span class="n">reverse_impl</span> <span class="k">else</span> <span class="n">node_url_reverse</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">flow_task</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_title</span></div>
 </pre></div>
 
           </div>

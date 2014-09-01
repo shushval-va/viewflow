@@ -74,7 +74,7 @@ and as soon as the request is approved it should be send into background.</p>
 <span class="kn">from</span> <span class="nn">viewflow.models</span> <span class="kn">import</span> <span class="n">Process</span>
 
 <span class="k">class</span> <span class="nc">HelloworldProcess</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ChatField</span><span class="p">(</span><span class="n">max_lenght</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ChatField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">approved</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
     <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
@@ -109,7 +109,7 @@ and as soon as the request is approved it should be send into background.</p>
 
     <span class="n">start</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">Start</span><span class="p">(</span><span class="n">StartView</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;text&quot;</span><span class="p">])</span> \
        <span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;helloworld.can_start_request&#39;</span><span class="p">)</span> \
-       <span class="o">.</span><span class="n">Activate</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">hello_world</span><span class="p">)</span>
+       <span class="o">.</span><span class="n">Next</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">hello_world</span><span class="p">)</span>
 
     <span class="n">approve</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">View</span><span class="p">(</span><span class="n">ProcessView</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;approve&quot;</span><span class="p">])</span> \
         <span class="o">.</span><span class="n">Permission</span><span class="p">(</span><span class="s">&#39;helloworld.can_approve_request&#39;</span><span class="p">)</span>
