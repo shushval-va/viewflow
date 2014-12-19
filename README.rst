@@ -2,6 +2,8 @@
 django-viewflow
 ===============
 
+This fork will support process and flow inheritance and include simplesite.
+
 Reusable workflow library for Django http://viewflow.io.
 
 Needle and thread to tie simple CRUD views and python functions in a complex business process.
