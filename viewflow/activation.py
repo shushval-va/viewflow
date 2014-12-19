@@ -142,7 +142,7 @@ class Activation(object):
 
 class StartActivation(Activation):
     @Activation.status.super()
-    def initialize(self, flow_task, task=None):
+    def initialize(self, flow_task, task):
         self.flow_task, self.flow_cls = flow_task, flow_task.flow_cls
 
         if task:
